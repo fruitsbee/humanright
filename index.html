@@ -54,10 +54,9 @@
     .btn:disabled{opacity:.55;cursor:not-allowed}
     .track{flex:1 1 auto;display:flex;flex-direction:column;gap:6px;min-width:0}
     .track-title{font-size:.85rem;color:#666;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    input[type="range"]{width:100%;accent-color:var(--accent)}
+    input[type="range"]{width:100%;accent-color:var(--accent);cursor:pointer}
     .time{display:flex;justify-content:space-between;font-size:.78rem;color:#777;margin-top:-2px}
 
-    /* JS가 죽어도 최소 안내가 보이게 */
     .fallback{color:#666;margin:0}
   </style>
 </head>
@@ -66,20 +65,24 @@
   <div class="container">
     <header>
       <h1>🌱 형평운동 읽기</h1>
-      <div class="sub">목차에서 편을 고르면 본문이 열립니다.</div>
+      <div class="sub">목차를 누르면 본문과 오디오가 시작됩니다.</div>
     </header>
 
     <div class="card">
       <div class="toc-title">목차</div>
-      <p class="toc-hint">읽을 글의 제목을 클릭해 주세요.</p>
+      <p class="toc-hint">아래 제목을 누르면 이야기를 들려드립니다.</p>
 
       <div class="toc-list" id="toc">
+        <!-- 
+          [주의] 구글 드라이브 링크는 트래픽이 많으면 차단될 수 있습니다.
+          소리가 안 나오면 mp3 파일을 다운로드 받아 'ep1.mp3' 처럼 상대 경로로 바꾸세요.
+        -->
         <button class="ep-btn" data-ep="ep1" data-audio="https://drive.google.com/uc?export=download&id=1lBq7uXz4i0bwdlYjwtHu8ItSOsXt63Va">
           <span class="dot"></span><p class="ep-title">형평운동 1부: 이름 위에 찍힌 '붉은 점'의 공포</p>
         </button>
 
         <button class="ep-btn" data-ep="ep2" data-audio="https://drive.google.com/uc?export=download&id=18MKPEk4EW0sMJi30qpLwJqMVRtMmKApW">
-          <span class="dot"></span><p class="ep-title">형평운동 2부: "고기 안 팝니다!" 백정들의 반격과 슬픈 싸움</p>
+          <span class="dot"></span><p class="ep-title">형평운동 2부: "고기 안 팝니다!" 백정들의 반격</p>
         </button>
 
         <button class="ep-btn" data-ep="ep3" data-audio="https://drive.google.com/uc?export=download&id=1suOt1QEq8Xn-7jHbter7IrX7ukqlQLGM">
@@ -91,7 +94,7 @@
     <div class="card">
       <h2 id="title"></h2>
       <div id="content" class="content-body">
-        <p class="fallback">목차에서 편을 선택해 주세요.</p>
+        <p class="fallback">👆 위 목차에서 이야기를 선택해 주세요.</p>
       </div>
     </div>
   </div>
@@ -100,19 +103,18 @@
     <div class="player-inner">
       <button class="btn" id="playBtn" disabled><span>🔊</span> 재생</button>
       <div class="track">
-        <div class="track-title" id="trackTitle">편을 선택하면 오디오가 연결됩니다</div>
+        <div class="track-title" id="trackTitle">선택된 오디오 없음</div>
         <input type="range" id="seek" min="0" max="1000" value="0" disabled />
         <div class="time">
           <span id="cur">00:00</span>
           <span id="dur">00:00</span>
         </div>
       </div>
-      <button class="btn" id="stopBtn" disabled><span>⏹</span> 정지</button>
-      <audio id="audio" preload="metadata" playsinline></audio>
+      <!-- 오디오 태그: 에러 확인을 위해 crossorigin 속성 추가 -->
+      <audio id="audio" preload="auto" playsinline></audio>
     </div>
   </div>
 
-  <!-- ✅ 본문은 JS 문자열이 아니라 template로 보관(따옴표 깨져도 안전) -->
   <template id="ep1">
     <p>혹시 여러분의 이름 옆에 빨간 점이 찍혀 있다면 기분이 어떨까요? 그것도 학교에 입학하거나 관공서에 서류를 낼 때마다 그 점 때문에 "너는 자격이 없어"라며 거절당한다면 말이죠. 일제강점기 시절, 겉으로는 신분제가 사라졌다고 했지만, 소를 잡는 일을 하던 '백정'들의 호적에는 여전히 선명한 '붉은 점(적점)'이 찍혀 있었습니다. 심지어 직업란에는 짐승을 잡는 놈이라는 뜻의 '도한(屠漢)'이라는 모욕적인 글자가 적혀 있어, 누가 봐도 차별받는 신분임을 알 수 있게 했습니다.</p>
     <p>1923년 4월, 경상남도 진주에서 일어난 '형평운동'은 바로 이 지독한 차별을 견디다 못한 사람들의 절규에서 시작되었습니다. 당시 진주의 돈 많은 백정이었던 이학찬은 아들을 학교에 보내려 했지만, 단지 백정의 아들이라는 이유만으로 입학을 거절당했습니다. 아무리 돈이 많아도 사람 대접을 받지 못하는 현실에 분노한 그는 깨어있는 양반 지식인 강상호 등과 손을 잡고 "우리도 똑같은 사람이다!"라고 외치기 시작했습니다.</p>
@@ -142,13 +144,11 @@
 
   const audio = document.getElementById('audio');
   const playBtn = document.getElementById('playBtn');
-  const stopBtn = document.getElementById('stopBtn');
   const trackTitle = document.getElementById('trackTitle');
   const seek = document.getElementById('seek');
   const cur = document.getElementById('cur');
   const dur = document.getElementById('dur');
 
-  let currentEpId = null;
   let userSeeking = false;
 
   function fmt(sec){
@@ -165,77 +165,96 @@
     });
   }
 
-  function openEpisode(epId, audioUrl, titleText){
+  async function openEpisode(epId, audioUrl, titleText){
     const tpl = document.getElementById(epId);
     if (!tpl) return;
 
-    currentEpId = epId;
     setActiveButton(epId);
 
+    // 본문 표시
     titleEl.style.display = 'block';
     titleEl.textContent = titleText;
-
     contentEl.innerHTML = tpl.innerHTML;
+    window.scrollTo({ top: 0, behavior: "smooth" });
 
-    // 오디오는 연결만(재생은 버튼 클릭에서만)
-    audio.pause();
-    audio.currentTime = 0;
+    // 오디오 초기화
+    playBtn.disabled = true; // 로딩 전까지 비활성
+    seek.disabled = true;
+    
     audio.src = audioUrl;
-    audio.load();
-
-    playBtn.disabled = false;
-    stopBtn.disabled = false;
-    seek.disabled = false;
-
-    trackTitle.textContent = titleText;
-    seek.value = 0;
+    trackTitle.textContent = "오디오 불러오는 중...";
     cur.textContent = "00:00";
     dur.textContent = "00:00";
-    playBtn.innerHTML = "<span>🔊</span> 재생";
+    seek.value = 0;
 
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    try {
+      // 로드 시도
+      await audio.load();
+      playBtn.disabled = false;
+      seek.disabled = false;
+      trackTitle.textContent = titleText;
+      
+      // ✨ 자동 재생 시도 (사용자 클릭 이벤트 안이므로 가능성 높음)
+      await audio.play();
+      playBtn.innerHTML = "<span>⏸</span> 일시정지";
+    } catch (err) {
+      console.warn("Autoplay failed or Blocked:", err);
+      // 자동재생 실패 시 버튼이라도 활성화
+      playBtn.disabled = false;
+      playBtn.innerHTML = "<span>🔊</span> 재생";
+      trackTitle.textContent = titleText; 
+    }
   }
 
-  // ✅ 이벤트 위임: 버튼이 많아져도 안전
+  // 1. 목차 클릭 이벤트
   toc.addEventListener('click', (e) => {
     const btn = e.target.closest('.ep-btn');
     if (!btn) return;
     openEpisode(btn.dataset.ep, btn.dataset.audio, btn.innerText.trim());
   });
 
+  // 2. 재생/정지 버튼
   playBtn.addEventListener('click', async () => {
-    if (!currentEpId) return;
+    if (!audio.src) return;
 
-    if (!audio.paused) {
+    if (audio.paused) {
+      try {
+        await audio.play();
+        playBtn.innerHTML = "<span>⏸</span> 일시정지";
+      } catch(err) {
+        alert("재생할 수 없습니다. 구글 드라이브 링크가 만료되었거나 차단되었습니다.");
+      }
+    } else {
       audio.pause();
       playBtn.innerHTML = "<span>🔊</span> 재생";
-      return;
-    }
-    try{
-      await audio.play(); // 사용자 클릭 안에서만
-      playBtn.innerHTML = "<span>⏸</span> 일시정지";
-    }catch(err){
-      console.error(err);
-      playBtn.innerHTML = "<span>🔊</span> 재생";
-      alert("재생이 막혔습니다. Drive 링크가 스트리밍에 불안정할 수 있습니다. (mp3를 GitHub에 같이 올리면 거의 해결됩니다)");
     }
   });
 
-  stopBtn.addEventListener('click', () => {
-    audio.pause();
-    audio.currentTime = 0;
-    playBtn.innerHTML = "<span>🔊</span> 재생";
+  // 3. 오디오 이벤트 리스너
+  audio.addEventListener('loadedmetadata', () => {
+    dur.textContent = fmt(audio.duration);
   });
-
-  audio.addEventListener('loadedmetadata', () => dur.textContent = fmt(audio.duration));
+  
   audio.addEventListener('timeupdate', () => {
     if (!userSeeking && isFinite(audio.duration) && audio.duration > 0) {
       seek.value = Math.floor((audio.currentTime / audio.duration) * 1000);
     }
     cur.textContent = fmt(audio.currentTime);
   });
-  audio.addEventListener('ended', () => playBtn.innerHTML = "<span>🔊</span> 재생");
 
+  audio.addEventListener('ended', () => {
+    playBtn.innerHTML = "<span>🔊</span> 재생";
+    seek.value = 0;
+  });
+
+  // ✨ 에러 처리 (구글 드라이브 차단 시 안내)
+  audio.addEventListener('error', (e) => {
+    console.error("Audio Error:", audio.error);
+    trackTitle.textContent = "⚠️ 오디오 재생 불가 (링크 차단됨)";
+    alert("구글 드라이브에서 오디오 스트리밍을 차단했습니다.\n\n해결법: mp3 파일을 다운로드 받아 HTML과 같은 폴더에 넣고 코드를 수정하세요.");
+  });
+
+  // 4. 탐색 바(Seek bar)
   seek.addEventListener('input', () => userSeeking = true);
   seek.addEventListener('change', () => {
     if (!isFinite(audio.duration) || audio.duration <= 0) return;
