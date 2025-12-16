@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>형평운동 읽기 + 오디오</title>
+
+  <!-- 따뜻한 느낌 폰트(선택): 시스템 폰트 우선, 없으면 Noto Serif KR -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --paper:#fbf7ef;
+      --ink:#2b2b2b;
+      --muted:#6b6b6b;
+      --card:#fffaf0;
+      --line:rgba(0,0,0,.08);
+      --shadow: 0 10px 30px rgba(0,0,0,.08);
+      --radius: 18px;
+      --maxw: 820px; /* 태블릿 세로 기준 가독성 폭 */
+      --pad: 18px;
+      --playerH: 92px; /* 플레이어 높이 */
+    }
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      color:var(--ink);
+      background:
+        radial-gradient(1200px 800px at 20% 10%, rgba(255,220,160,.18), transparent 55%),
+        radial-gradient(1200px 800px at 80% 0%, rgba(255,200,180,.14), transparent 55%),
+        linear-gradient(0deg, rgba(0,0,0,.03), rgba(0,0,0,0)),
+        var(--paper);
+      font-family: ui-serif, "Noto Serif KR", "Apple SD Gothic Neo", "Malgun Gothic", serif;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+
+    .wrap{
+      max-width: var(--maxw);
+      margin: 0 auto;
+      padding: 22px 16px calc(var(--playerH) + 26px);
+    }
+
+    header{
+      display:flex;
+      align-items:flex-start;
+      gap:14px;
+      margin: 10px 0 18px;
+    }
+    .badge{
+      width: 46px; height: 46px;
+      border-radius: 14px;
+      background: rgba(255,255,255,.65);
+      border:1px solid var(--line);
+      box-shadow: 0 6px 16px rgba(0,0,0,.06);
+      display:grid;
+      place-items:center;
+      font-size: 22px;
+    }
+    h1{
+      margin:0;
+      font-size: 22px;
+      letter-spacing:-0.2px;
+      line-height:1.25;
+    }
+    .sub{
+      margin-top:6px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height:1.5;
+    }
+
+    .layout{
+      display:grid;
+      gap: 14px;
+    }
+
+    .card{
+      background: rgba(255,255,255,.58);
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      backdrop-filter: blur(6px);
+    }
+
+    .toc{
+      padding: 10px;
+    }
+    .toc-title{
+      padding: 10px 12px 6px;
+      font-size: 14px;
+      color: var(--muted);
+    }
+    .toc button{
+      width:100%;
+      text-align:left;
+      border:0;
+      background: transparent;
+      padding: 12px 12px;
+      border-radius: 14px;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      transition: background .15s ease;
+    }
+    .toc button:hover{ background: rgba(255,255,255,.55); }
+    .dot{
+      width:10px; height:10px; border-radius:50%;
+      background: rgba(210,60,50,.85);
+      box-shadow: 0 0 0 3px rgba(210,60,50,.12);
+      flex: 0 0 auto;
+    }
+    .toc .meta{
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+    }
+    .toc .t{
+      font-size: 16px;
+      line-height:1.25;
+      letter-spacing:-.2px;
+    }
+    .toc .d{
+      font-size: 12px;
+      color: var(--muted);
+      line-height:1.3;
+    }
+    .toc .active{
+      background: rgba(255,255,255,.78);
+      outline: 1px solid rgba(210,60,50,.18);
+    }
+
+    article{
+      padding: 18px 16px 18px;
+      background: rgba(255,250,240,.72);
+    }
+    .title-row{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .episode-title{
+      margin:0;
+      font-size: 22px;
+      line-height:1.25;
+      letter-spacing:-0.3px;
+    }
+    .episode-note{
+      color: var(--muted);
+      font-size: 12px;
+      line-height:1.4;
+      margin: 6px 0 0;
+    }
+
+    /* 본문 가독성(핵심) */
+    .content{
+      font-size: 17px;
+      line-height: 1.85;
+      letter-spacing: -0.1px;
+      word-break: keep-all;
+    }
+    .content p{
+      margin: 0 0 14px;
+    }
+    .content p:last-child{ margin-bottom:0; }
+
+    /* 플로팅 오디오 플레이어 */
+    .player{
+      position: fixed;
+      left: 0; right: 0;
+      bottom: 0;
+      padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+      background: rgba(255,255,255,.72);
+      border-top: 1px solid var(--line);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 -10px 26px rgba(0,0,0,.08);
+    }
+    .player-inner{
+      max-width: var(--maxw);
+      margin: 0 auto;
+      display:flex;
+      gap: 10px;
+      align-items:center;
+    }
+    .btn{
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.82);
+      border-radius: 14px;
+      padding: 12px 14px;
+      cursor:pointer;
+      font-size: 14px;
+      display:flex;
+      align-items:center;
+      gap:8px;
+      min-width: 110px;
+      justify-content:center;
+    }
+    .btn:active{ transform: translateY(1px); }
+    .track{
+      flex:1 1 auto;
+      display:flex;
+      flex-direction:column;
+      gap: 6px;
+      min-width: 0;
+    }
+    .track-title{
+      font-size: 13px;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow:hidden;
+      text-overflow: ellipsis;
+    }
+    input[type="range"]{
+      width:100%;
+      accent-color: #c34a3b;
+    }
+    .time{
+      display:flex;
+      justify-content:space-between;
+      font-size: 12px;
+      color: var(--muted);
+      margin-top:-2px;
+    }
+    .small{
+      font-size: 12px;
+      color: var(--muted);
+      text-align:center;
+      margin: 10px 0 0;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <header>
+      <div class="badge">📜</div>
+      <div>
+        <h1>형평운동 읽기 자료 (글 + 오디오)</h1>
+        <div class="sub">제목을 누르면 글이 열리고, 아래 플로팅 플레이어에서 언제든 재생/정지할 수 있습니다.</div>
+      </div>
+    </header>
+
+    <div class="layout">
+      <section class="card toc" aria-label="목차">
+        <div class="toc-title">목차</div>
+        <div id="toc"></div>
+      </section>
+
+      <section class="card">
+        <article>
+          <div class="title-row">
+            <div>
+              <h2 class="episode-title" id="episodeTitle">편을 선택해 주세요</h2>
+              <p class="episode-note" id="episodeNote">아래에서 제목을 클릭하면 본문이 표시됩니다.</p>
+            </div>
+          </div>
+          <div class="content" id="content"></div>
+        </article>
+      </section>
+    </div>
+  </div>
+
+  <!-- 플로팅 플레이어 -->
+  <div class="player" role="region" aria-label="오디오 플레이어">
+    <div class="player-inner">
+      <button class="btn" id="playBtn" disabled>▶️ 재생</button>
+
+      <div class="track">
+        <div class="track-title" id="trackTitle">오디오가 선택되지 않았습니다</div>
+        <input type="range" id="seek" min="0" max="1000" value="0" disabled />
+        <div class="time">
+          <span id="cur">00:00</span>
+          <span id="dur">00:00</span>
+        </div>
+      </div>
+
+      <button class="btn" id="stopBtn" disabled>⏹️ 정지</button>
+      <audio id="audio" preload="metadata"></audio>
+    </div>
+    <div class="small">팁: 재생 중에도 글을 스크롤하며 읽을 수 있습니다.</div>
+  </div>
+
+  <script>
+    // ====== 데이터(선생님이 주신 글/오디오 링크 그대로) ======
+    const EPISODES = [
+      {
+        id: "ep1",
+        title: "형평운동 1부: 이름 위에 찍힌 '붉은 점'의 공포",
+        audio: "https://drive.google.com/uc?export=download&id=1lBq7uXz4i0bwdlYjwtHu8ItSOsXt63Va",
+        html: `<p>혹시 여러분의 이름 옆에 빨간 점이 찍혀 있다면 기분이 어떨까요? 그것도 학교에 입학하거나 관공서에 서류를 낼 때마다 그 점 때문에 "너는 자격이 없어"라며 거절당한다면 말이죠. 일제강점기 시절, 겉으로는 신분제가 사라졌다고 했지만, 소를 잡는 일을 하던 '백정'들의 호적에는 여전히 선명한 '붉은 점(적점)'이 찍혀 있었습니다. 심지어 직업란에는 짐승을 잡는 놈이라는 뜻의 '도한(屠漢)'이라는 모욕적인 글자가 적혀 있어, 누가 봐도 차별받는 신분임을 알 수 있게 했습니다.</p><p>1923년 4월, 경상남도 진주에서 일어난 '형평운동'은 바로 이 지독한 차별을 견디다 못한 사람들의 절규에서 시작되었습니다. 당시 진주의 돈 많은 백정이었던 이학찬은 아들을 학교에 보내려 했지만, 단지 백정의 아들이라는 이유만으로 입학을 거절당했습니다. 아무리 돈이 많아도 사람 대접을 받지 못하는 현실에 분노한 그는 깨어있는 양반 지식인 강상호 등과 손을 잡고 "우리도 똑같은 사람이다!"라고 외치기 시작했습니다.</p><p>이들이 만든 단체의 이름은 '형평사'였습니다. '형평(衡平)'은 저울처럼 평등하다는 뜻입니다. 저울의 눈금은 물건이 무엇이든 무게에 따라 똑같이 움직이는 것처럼, 사람도 신분이나 직업에 상관없이 똑같은 존엄성을 가져야 한다는 뜻을 담고 있습니다. 오늘날 우리에게는 너무나 당연한 '평등'이라는 가치가, 100년 전 진주에서는 목숨을 걸고 찾아야 했던 간절한 소원이었습니다.</p><p>형평운동은 단순한 불만 표출이 아니었습니다. 그것은 "저울처럼 공평한 세상을 만들자"는 한국 최초의 인권 운동이자, 인간의 존엄을 되찾기 위한 눈물겨운 투쟁이었습니다. 이름 옆의 붉은 점을 지우기 위해 시작된 이 운동은 이후 전국의 백정들에게 들불처럼 번져나가, 한반도 역사상 가장 뜨거운 신분 해방 운동으로 기록되게 됩니다.</p>`
+      },
+      {
+        id: "ep2",
+        title: '형평운동 2부: "고기 안 팝니다!" 백정들의 반격과 슬픈 싸움',
+        audio: "https://drive.google.com/uc?export=download&id=18MKPEk4EW0sMJi30qpLwJqMVRtMmKApW",
+        html: `<p>형평운동이 시작되자 백정들은 단순히 "차별하지 마세요"라고 호소하는 데 그치지 않았습니다. 그들은 자신들만이 가진 강력한 무기를 꺼내 들었습니다. 바로 '고기'였습니다. 마을 잔치나 제사에 고기가 없으면 아무것도 할 수 없던 시절, 사람들이 형평사 운동을 방해하거나 백정을 무시하면 그들은 단결하여 "오늘부터 고기를 팔지 않겠다!"라며 동맹 파업을 선언했습니다. 고기 유통을 꽉 쥐고 있던 그들의 반격에 사람들은 당황할 수밖에 없었습니다.</p><p>하지만 형평운동의 앞길에는 예상치 못한 거대한 적이 기다리고 있었습니다. 놀랍게도 그들은 일본 경찰도, 부자 양반도 아닌 바로 이웃의 평범한 '농민'들이었습니다. 당시 가난했던 농민들은 "나는 그래도 백정보다는 낫다"라는 생각으로 힘든 삶을 위로받곤 했습니다. 그런데 천하게 여겼던 백정들이 "우리도 평등하다"며 목소리를 높이자, 농민들은 자신의 지위가 위협받는다고 느껴 격렬하게 반대하기 시작했습니다.</p><p>이를 '반(反)형평운동'이라고 부르는데, 그 갈등은 생각보다 훨씬 심각했습니다. 1925년 경북 예천에서는 "백정 주제에 건방지다"는 말 한마디가 불씨가 되어, 수천 명의 농민이 형평사 건물을 부수고 사람들을 때리는 폭력 사태까지 벌어졌습니다. 가장 낮은 곳에 있는 사람들끼리 서로를 이해하고 돕기는커녕, 오히려 차별하고 미워하며 싸우게 된 이 상황은 우리 역사 속의 뼈아픈 비극 중 하나입니다.</p><p>결국 형평운동은 단순히 제도를 바꾸는 싸움이 아니었습니다. 내 마음속 깊이 박혀 있는 '차별의식'과 싸우는 것이 훨씬 더 어렵다는 것을 보여주었기 때문입니다. 을과 을의 전쟁이라 불렸던 그 슬픈 싸움은, 오늘날 우리 안에도 "나는 쟤보다는 낫지"라며 누군가를 무시하는 마음이 숨어 있지는 않은지 되돌아보게 만듭니다.</p>`
+      },
+      {
+        id: "ep3",
+        title: "형평운동 3부: 국경을 넘은 악수, 그리고 남겨진 유산",
+        audio: "https://drive.google.com/uc?export=download&id=1suOt1QEq8Xn-7jHbter7IrX7ukqlQLGM",
+        html: `<p>형평운동 포스터에는 한 남자가 사가모(사각 모자)를 쓰고 저울을 번쩍 들어 올린 그림이 그려져 있습니다. 재미있는 사실은 이 모습이 현재 대한민국 대법원이나 법원 앞에 서 있는 '정의의 여신상'이 든 저울과 그 의미가 매우 닮아 있다는 점입니다. 100년 전 진주에서 백정들이 꿈꿨던 '치우치지 않는 공정함'은 이제 대한민국의 법과 정의를 상징하는 로고가 되어 우리 곁에 남아 있습니다.</p><p>또한 형평운동은 우리끼리만 외친 고독한 외침이 아니었습니다. 바다 건너 일본에서도 차별받던 천민 계급들이 만든 '수평사'라는 단체가 있었습니다. 조선의 형평사와 일본의 수평사는 서로 "우리는 국경을 넘어 연결되어 있다"라며 끈끈한 우정을 나눴습니다. 서로 축하 편지를 보내고 행사에 참여하며, 차별 없는 세상을 만들기 위해 나라를 초월하여 연대했습니다. 이는 당시로써는 보기 드문 국제적인 인권 운동의 사례였습니다.</p><p>물론 형평사 내부에서도 갈등은 있었습니다. "우리의 고향인 진주에서 인권과 교육에 집중하자"는 파와 "서울로 본부를 옮겨 경제적인 투쟁을 해야 한다"는 파가 나뉘어 치열하게 논쟁하기도 했습니다. 하지만 이런 갈등조차도 더 나은 세상을 만들기 위한 치열한 고민의 과정이었습니다. 비록 일제의 탄압과 내부 분열로 운동은 점차 약해졌지만, 그들이 뿌린 평등의 씨앗은 결코 사라지지 않았습니다.</p><p>오늘날 우리 주변에 '백정'이라는 신분은 사라졌습니다. 하지만 다문화 가정, 장애인, 외국인 노동자 등 우리 사회에는 여전히 보이지 않는 '붉은 점'을 가진 이웃들이 살아가고 있습니다. 100년 전 진주에서 "사람은 누구나 저울처럼 평등하다"라고 외쳤던 그들의 목소리는, 지금 우리가 혐오와 차별 대신 존중과 배려를 선택해야 한다고 조용히, 그러나 단호하게 가르쳐주고 있습니다.</p>`
+      }
+    ];
+
+    // ====== UI 바인딩 ======
+    const tocEl = document.getElementById("toc");
+    const titleEl = document.getElementById("episodeTitle");
+    const noteEl  = document.getElementById("episodeNote");
+    const contentEl = document.getElementById("content");
+
+    const audio = document.getElementById("audio");
+    const playBtn = document.getElementById("playBtn");
+    const stopBtn = document.getElementById("stopBtn");
+    const trackTitle = document.getElementById("trackTitle");
+    const seek = document.getElementById("seek");
+    const cur = document.getElementById("cur");
+    const dur = document.getElementById("dur");
+
+    let currentEpisode = null;
+    let userSeeking = false;
+
+    function fmtTime(sec){
+      if (!isFinite(sec)) return "00:00";
+      sec = Math.max(0, Math.floor(sec));
+      const m = String(Math.floor(sec/60)).padStart(2,"0");
+      const s = String(sec%60).padStart(2,"0");
+      return `${m}:${s}`;
+    }
+
+    function setActiveButton(id){
+      [...toc]()
